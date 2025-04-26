@@ -21,25 +21,25 @@ app.use('/api', authRoutes); // ✅
 
 async function getCoordinates(address) {
   try {
-      const response = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
+      const response = await axios.get(`https://maps.googleapis.com/maps/api/geocode/json`, {
           params: {
               address: address,
-              key: process.env.GOOGLE_MAPS_API_KEY
+              key: GOOGLE_API_KEY
           }
       });
-
-      if (response.data.status === 'OK' && response.data.results.length > 0) {
+      if (response.data.results.length > 0) {
           const location = response.data.results[0].geometry.location;
           return { lat: location.lat, lng: location.lng };
       } else {
-          console.error('❌ Nincs találat a címre vagy hiba:', response.data.status);
           return { lat: null, lng: null };
       }
   } catch (error) {
-      console.error('❌ Hiba a koordináta lekérés közben:', error.message);
+      console.error("Hiba a Google Geocoding API lekérésekor:", error);
       return { lat: null, lng: null };
   }
 }
+
+
 
 
 // Frissíti a balesetekhez tartozó koordinátákatapp.get('/update-coordinates', async (req, res) => {
@@ -71,6 +71,7 @@ app.get('/update-coordinates', async (req, res) => {
     res.status(500).send('❌ Hiba a koordináták frissítésekor.');
   }
 });
+
 
 
 
@@ -284,21 +285,18 @@ app.post('/api/accidents/add', async (req, res) => {
   const { location, city, date, time, accident_type, weather_id } = req.body;
 
   try {
-    const fullAddress = `${location}, ${city}, Hungary`;  // 🇭🇺 mindig hozzáírjuk, hogy Magyarország legyen
+    // 👇 Koordináták lekérése
+    const fullAddress = `${location}, ${city}`;
     const coords = await getCoordinates(fullAddress);
 
-    if (coords.lat === null || coords.lng === null) {
-      return res.status(400).json({ error: '❌ Nem sikerült koordinátát találni a címhez.' });
-    }
-
-    await pool.query(`
+    const result = await pool.query(`
       INSERT INTO accidents (location, city, date, time, accident_type, weather_id, latitude, longitude)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, [location, city, date, time, accident_type, weather_id, coords.lat, coords.lng]);
 
-    res.status(201).json({ message: '✅ A baleset sikeresen rögzítve lett, koordinátával együtt!' });
+    res.status(201).json({ message: '✅ A baleset sikeresen rögzítve lett!' });
   } catch (error) {
-    console.error('❌ Hiba a baleset rögzítése közben:', error);
+    console.error("❌ Hiba baleset rögzítésekor:", error);
     res.status(500).json({ error: '❌ Hiba a baleset rögzítésekor.' });
   }
 });
