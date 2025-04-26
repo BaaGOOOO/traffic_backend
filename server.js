@@ -42,32 +42,30 @@ async function getCoordinates(address) {
 // Frissíti a balesetekhez tartozó koordinátákatapp.get('/update-coordinates', async (req, res) => {
    // Frissíti a balesetekhez tartozó koordinátákat
 // Csak azokhoz rendel koordinátát, ahol még nincs
-app.get('/update-coordinates', async (req, res) => {
+app.post('/api/accidents/add', async (req, res) => {
+  const { location, city, date, time, accident_type, weather_id } = req.body;
+
   try {
-    const accidents = await pool.query(`
-      SELECT accidents_ID, location, city 
-      FROM Accidents 
-      WHERE latitude IS NULL OR longitude IS NULL
-    `);
+    const formattedCity = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
+    const fullAddress = `${location}, ${formattedCity}, Hungary`;
+    const coords = await getCoordinates(fullAddress);
 
-    for (let accident of accidents.rows) {
-      const fullAddress = `${accident.location}, ${accident.city}`;
-      const coords = await getCoordinates(fullAddress);
-
-      if (coords.lat && coords.lng) {
-        await pool.query(
-          'UPDATE Accidents SET latitude = $1, longitude = $2 WHERE accidents_ID = $3',
-          [coords.lat, coords.lng, accident.accidents_id]
-        );
-      }
+    if (coords.lat === null || coords.lng === null) {
+      return res.status(400).json({ error: '❌ Nem sikerült koordinátát találni ehhez a címhez!' });
     }
 
-    res.send('✅ Csak hiányzó koordináták frissítve!');
+    await pool.query(`
+      INSERT INTO accidents (location, city, date, time, accident_type, weather_id, latitude, longitude)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `, [location, formattedCity, date, time, accident_type, weather_id, coords.lat, coords.lng]);
+
+    res.status(201).json({ message: '✅ A baleset sikeresen rögzítve lett!' });
   } catch (error) {
-    console.error("❌ Koordináta frissítési hiba:", error);
-    res.status(500).send('❌ Hiba a koordináták frissítésekor.');
+    console.error("❌ Hiba baleset rögzítésekor:", error);
+    res.status(500).json({ error: '❌ Hiba a baleset rögzítésekor.' });
   }
 });
+
 
 
 
