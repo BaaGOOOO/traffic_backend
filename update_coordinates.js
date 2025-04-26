@@ -19,7 +19,8 @@ async function updateCoordinates() {
 
     for (let row of res.rows) {
         // Ha van city, akkor belefoglaljuk a címbe
-        const address = encodeURIComponent(`${row.location}, ${row.city}, ${row.postal_code}, Hungary`);
+        const address = encodeURIComponent(`${row.location}, ${row.city}, Hungary`);
+
 
             
         const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${API_KEY}`;
