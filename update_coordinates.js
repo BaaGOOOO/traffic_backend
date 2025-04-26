@@ -3,12 +3,12 @@ const { Client } = require('pg');
 
 const API_KEY = 'AIzaSyCAc-okFQvSXrVpjAndBQPupteDCEiVuRc';
 const client = new Client({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'traffic_analysis',
-  password: '20001212',
-  port: 5432,
-});
+    connectionString: 'postgresql://traffic_analysis_db_user:EGxIn5idzWGG95hMsoN4LuIF4Tlq1rKG@dpg-d06flbc9c44c73fgnodg-a.frankfurt-postgres.render.com/traffic_analysis_db',
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  });
+  
 
 async function updateCoordinates() {
     await client.connect();
