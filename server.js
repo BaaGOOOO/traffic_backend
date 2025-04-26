@@ -11,7 +11,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
 const authRoutes = require('./auth');
@@ -493,5 +493,5 @@ app.delete('/api/admin/accidents/:id', checkAdminPermission, async (req, res) =>
 
 
 app.listen(PORT, () => {
-    console.log(`✅ Szerver fut: http://localhost:${PORT}`);
+  console.log(`✅ Szerver fut: http://localhost:${PORT}`);
 });
