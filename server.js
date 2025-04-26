@@ -61,9 +61,11 @@ app.post('/api/accidents/add', async (req, res) => {
 
     res.status(201).json({ message: '✅ A baleset sikeresen rögzítve lett!' });
   } catch (error) {
-    console.error("❌ Hiba baleset rögzítésekor:", error);
-    res.status(500).json({ error: '❌ Hiba a baleset rögzítésekor.' });
+    console.error("❌ Hiba baleset rögzítésekor:", error.message);
+    console.error(error.stack);
+    res.status(500).json({ error: error.message });
   }
+  
 });
 
 
